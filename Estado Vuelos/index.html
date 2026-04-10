@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado de Vuelos - Proyecto DAW</title>
+    <style>
+        /* --- ESTILOS GENERALES --- */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        /* --- 1. HERO BANNER Y BUSCADOR --- */
+        .hero-banner {
+            background-color: #87CEEB; 
+            background-image: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=2000');
+            background-size: cover;
+            background-position: center;
+            height: 350px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-title {
+            color: black;
+            background-color: white;
+            padding: 10px 20px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 30px;
+            transform: rotate(-2deg);
+            text-transform: uppercase;
+        }
+
+        /* Barra de búsqueda completa */
+        .search-box {
+            background: white;
+            padding: 10px 10px 10px 30px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            width: 80%;
+            max-width: 900px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            border-right: 1px solid #eee;
+            padding-right: 15px;
+        }
+        .input-group:last-of-type { border-right: none; }
+
+        .input-group label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .input-group input {
+            border: none;
+            font-size: 1.1rem;
+            outline: none;
+            width: 100%;
+            font-weight: 500;
+        }
+
+        .input-group input:focus {
+            border-bottom: 2px solid #ffcc00;
+        }
+
+        .btn-search {
+            background-color: #ffcc00;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            transition: transform 0.2s;
+        }
+        .btn-search:hover { transform: scale(1.05); }
+
+        /* --- 2. SECCIÓN DE RESULTADOS --- */
+        .results-section {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .results-header h2 {
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .results-header p {
+            font-size: 0.9rem;
+            color: #555;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+        }
+
+        /* Cabecera de la tabla (oculta en móvil idealmente) */
+        .list-headers {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr 1fr 1.5fr;
+            padding: 10px 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        /* Tarjeta de Vuelo (Card) */
+        .flight-card {
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr 1fr 1.5fr;
+            align-items: center;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid #eaeaea;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Detalle amarillo lateral estilo Vueling */
+        .flight-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 15%;
+            bottom: 15%;
+            width: 5px;
+            background-color: #ffcc00;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .col-flight-num { font-weight: bold; font-size: 0.9rem;}
+        .col-flight-num span { display: block; font-size: 0.75rem; color: #666; font-weight: normal; }
+
+        /* Diseño de la ruta (BCN -----✈----- LPA) */
+        .col-route {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        .route-point { text-align: center; }
+        .route-point strong { display: block; font-size: 1.1rem; }
+        .route-point span { font-size: 0.8rem; color: #777; }
+        
+        .route-line {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            color: #ccc;
+        }
+        .route-line hr {
+            flex: 1;
+            border: none;
+            border-top: 2px dashed #eaeaea;
+            margin: 0 10px;
+        }
+
+        .col-time {
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* --- 3. BOTONES DE ESTADO (Punto .6 de tu documento) --- */
+        .status-badge {
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Colores dinámicos según el estado */
+        .status-aterrizado { background-color: #6c757d; color: white; border: 1px solid #6c757d; } /* Completado */
+        .status-en-vuelo { background-color: transparent; color: #333; border: 1px solid #ccc; } /* Embarcando / En vuelo */
+        .status-en-hora { background-color: #28a745; color: white; border: 1px solid #28a745; } /* Programado / En hora */
+        .status-retrasado { background-color: #ffc107; color: black; border: 1px solid #ffc107; } /* Retrasado */
+
+    </style>
+</head>
+<body>
+
+<div class="hero-banner">
+    <div class="hero-title">¿Qué vuelo quieres consultar?</div>
+    
+    <div class="search-box">
+        <div class="input-group">
+            <label>De</label>
+            <input type="text" placeholder="Origen (Ej. BCN)">
+        </div>
+        <div class="input-group">
+            <label>A</label>
+            <input type="text" placeholder="Destino (Ej. LPA)">
+        </div>
+        <div class="input-group">
+            <label>Fecha</label>
+            <input type="date" value="2026-04-08">
+        </div>
+        <button class="btn-search">🔍</button>
+    </div>
+</div>
+
+<div class="results-section">
+    <div class="results-header">
+        <h2>ESTADO DE VUELOS DE TU AEROLÍNEA</h2>
+        <p>VUELOS BARCELONA (BCN) - GRAN CANARIA (LPA) PARA EL DÍA SELECCIONADO</p>
+    </div>
+
+    <div class="list-headers">
+        <div>Nº DE VUELO</div>
+        <div style="text-align: center;">ORIGEN / DESTINO</div>
+        <div style="text-align: center;">SALIDA</div>
+        <div style="text-align: center;">LLEGADA</div>
+        <div style="text-align: center;">ESTADO</div>
+    </div>
+
+    <div class="flight-card">
+        <div class="col-flight-num">
+            VY3004
+            <span>TuAerolínea</span>
+        </div>
+        <div class="col-route">
+            <div class="route-point">
+                <strong>BCN</strong>
+                <span>Barcelona</span>
+            </div>
+            <div class="route-line">
+                <hr> ✈ <hr>
+            </div>
+            <div class="route-point">
+                <strong>LPA</strong>
+                <span>Gran Canaria</span>
+            </div>
+        </div>
+        <div class="col-time">06:50</div>
+        <div class="col-time">09:25</div>
+        <div>
+            <div class="status-badge status-aterrizado">
+                Finalizado
+            </div>
+        </div>
+    </div>
+
+    <div class="flight-card">
+        <div class="col-flight-num">
+            VY3002
+            <span>TuAerolínea</span>
+        </div>
+        <div class="col-route">
+            <div class="route-point">
+                <strong>BCN</strong>
+                <span>Barcelona</span>
+            </div>
+            <div class="route-line">
+                <hr> ✈ <hr>
+            </div>
+            <div class="route-point">
+                <strong>LPA</strong>
+                <span>Gran Canaria</span>
+            </div>
+        </div>
+        <div class="col-time">11:35</div>
+        <div class="col-time">14:10</div>
+        <div>
+            <div class="status-badge status-en-vuelo">
+                Volando
+            </div>
+        </div>
+    </div>
+
+    <div class="flight-card">
+        <div class="col-flight-num">
+            VY3006
+            <span>TuAerolínea</span>
+        </div>
+        <div class="col-route">
+            <div class="route-point">
+                <strong>BCN</strong>
+                <span>Barcelona</span>
+            </div>
+            <div class="route-line">
+                <hr> ✈ <hr>
+            </div>
+            <div class="route-point">
+                <strong>LPA</strong>
+                <span>Gran Canaria</span>
+            </div>
+        </div>
+        <div class="col-time">16:35</div>
+        <div class="col-time">19:10</div>
+        <div>
+            <div class="status-badge status-en-hora">
+                 En hora
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
